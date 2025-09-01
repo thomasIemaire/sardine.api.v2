@@ -23,7 +23,7 @@ def create_data_router(db: Database) -> Blueprint:
         payload = request.get_json(silent=True)
         if not payload:
             return json_error("Bad request")
-        created = service.create(get_jwt_identity(), payload)
+        created = service.create(payload, user_id=get_jwt_identity())
         return jsonify(created), 201
 
     @bp.get("/<id>")

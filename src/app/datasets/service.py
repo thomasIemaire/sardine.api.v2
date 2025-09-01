@@ -3,6 +3,7 @@ from src.helpers.base_service import BaseService
 from .dao import DatasetsDao
 from bson import ObjectId
 from pymongo.database import Database
+import random
 
 class DatasetsService(BaseService):
     
@@ -11,7 +12,7 @@ class DatasetsService(BaseService):
         self.dao = DatasetsDao(db)
 
     def find_all(self):
-        datasets = self.dao.find(projection={"parameters": 0, "last_log": 0})
+        datasets = self.dao.find({"status": {"$ne": "completed"}}, projection={"parameters": 0, "last_log": 0})
         models = []
         for dataset in datasets:
             model_data = {}
@@ -34,9 +35,40 @@ class DatasetsService(BaseService):
             model_data["dataset"] = str(dataset.get("_id"))
             model_data["status"] = dataset.get("status", "")
             model_data["version"] = dataset.get("version", "")
+            model_data["progress"] = dataset.get("progress", None)
             models.append(model_data)
 
         return models
+    
+    def find_examples(self, dataset_id: str, size: int = 10):
+        dataset = self.get_document(id=dataset_id)
+        model = self.dao.db["models"].find_one({"_id": ObjectId(dataset.get("model"))})
+
+        dataset_data = list(self.dao.db["datasets_data"].find({"dataset": ObjectId(dataset_id)}))
+    
+        ddselected = random.choices(dataset_data, k=size)
+        entities = model.get("entities", []) if model else []
+
+        examples = []
+        for d in ddselected:
+            data = d.get("data", {})
+            text = data.get("text", "")
+
+            example_entities = []
+            for s, e, k in data.get("entities", []):
+                key = entities[k]
+                example_entities.append({
+                    "start": s,
+                    "end": e,
+                    "key": key
+                })
+            
+            examples.append({
+                "text": text,
+                "entities": example_entities
+            })
+        
+        return examples
 
     def add_data(self, dataset_id: str, data: dict):
         return self.db["datasets_data"].insert_one({

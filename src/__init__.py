@@ -39,6 +39,9 @@ def _register_blueprints(app: Flask, db: Database) -> None:
     @api_bp.get("/")
     def root():
         return jsonify({"message": "'Gloup Gloup' I'm Sardine and this is my API !"}), 200
+    
+    from src.app.agents import create_agents_router
+    api_bp.register_blueprint(create_agents_router(db), url_prefix="/agents")
 
     from src.app.auth import create_auth_router
     api_bp.register_blueprint(create_auth_router(db), url_prefix="/auth")

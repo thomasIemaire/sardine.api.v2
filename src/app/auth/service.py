@@ -21,7 +21,7 @@ class AuthService(BaseService):
         if not email or "@" not in email:
             raise ValueError("Email invalide")
 
-        if self.document_exists({"email": email}):
+        if self.document_exists(query={"email": email}):
             raise ValueError("Email déjà utilisé")
 
         if not data.get("firstname") or not data.get("lastname"):
@@ -40,7 +40,7 @@ class AuthService(BaseService):
             "role": "user",
         }
 
-        self.dao.insert_one(user)
+        user = self.dao.serialize(self.dao.insert_one(user))
 
         save_avatar(
             generate_avatar(email, 800),
@@ -87,4 +87,4 @@ class AuthService(BaseService):
 
     def email_exists(self, email: str) -> bool:
         email = email.strip().lower()
-        return self.document_exists({"email": email})
+        return self.document_exists(query={"email": email})

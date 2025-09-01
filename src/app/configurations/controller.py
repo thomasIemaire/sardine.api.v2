@@ -23,7 +23,7 @@ def create_configurations_router(db: Database) -> Blueprint:
         payload = request.get_json(silent=True)
         if not payload:
             return json_error("Bad request")
-        configuration = service.create(get_jwt_identity(), payload)
+        configuration = service.create(payload, user_id=get_jwt_identity())
         return jsonify(configuration), 201
     
     @bp.get("/<id>")

@@ -17,6 +17,15 @@ def create_datasets_router(db: Database) -> Blueprint:
             return json_error("Not found", 404)
         return jsonify(docs), 200
     
+    @bp.get("/<id>/examples")
+    @jwt_required()
+    def find_dataset_examples(id: str):
+        size = request.args.get("size", type=int)
+        docs = service.find_examples(id, size)
+        if not docs:
+            return json_error("Not found", 404)
+        return jsonify(docs), 200
+    
     @bp.post("/train/<id>")
     @jwt_required()
     def train_dataset(id: str):
